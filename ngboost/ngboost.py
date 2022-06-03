@@ -267,7 +267,7 @@ class NGBoost:
             raise ValueError("y cannot be None")
 
         X, Y = check_X_y(
-            X, Y, accept_sparse=True, y_numeric=True, multi_output=self.multi_output
+            X, Y, accept_sparse=True, y_numeric=True, multi_output=self.multi_output, force_all_finite="allow-nan"
         )
 
         self.n_features = X.shape[1]
@@ -284,6 +284,7 @@ class NGBoost:
                 accept_sparse=True,
                 y_numeric=True,
                 multi_output=self.multi_output,
+                force_all_finite="allow-nan"
             )
             val_params = self.pred_param(X_val)
             val_loss_list = []
@@ -387,7 +388,7 @@ class NGBoost:
             A NGBoost distribution object
         """
 
-        X = check_array(X, accept_sparse=True)
+        X = check_array(X, accept_sparse=True, force_all_finite="allow-nan")
 
         if (
             max_iter is not None
@@ -438,7 +439,7 @@ class NGBoost:
             Numpy array of the estimates of Y
         """
 
-        X = check_array(X, accept_sparse=True)
+        X = check_array(X, accept_sparse=True, force_all_finite="allow-nan")
 
         return self.pred_dist(X, max_iter=max_iter).predict()
 
