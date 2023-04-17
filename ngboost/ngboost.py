@@ -125,6 +125,7 @@ class NGBoost:
     def pred_param(self, X, max_iter=None):
         m, n = X.shape
         params = np.ones((m, self.Manifold.n_params)) * self.init_params
+        self.scalings = [1. for x in self.base_models]
         for i, (models, s, col_idx) in enumerate(
             zip(self.base_models, self.scalings, self.col_idxs)
         ):
@@ -267,7 +268,7 @@ class NGBoost:
             raise ValueError("y cannot be None")
 
         X, Y = check_X_y(
-            X, Y, accept_sparse=True, y_numeric=True, multi_output=self.multi_output, force_all_finite="allow-nan"
+           X, Y, accept_sparse=True, y_numeric=True, multi_output=self.multi_output, force_all_finite="allow-nan"
         )
 
         self.n_features = X.shape[1]
@@ -279,12 +280,12 @@ class NGBoost:
 
         if X_val is not None and Y_val is not None:
             X_val, Y_val = check_X_y(
-                X_val,
-                Y_val,
-                accept_sparse=True,
-                y_numeric=True,
-                multi_output=self.multi_output,
-                force_all_finite="allow-nan"
+               X_val,
+               Y_val,
+               accept_sparse=True,
+               y_numeric=True,
+               multi_output=self.multi_output,
+               force_all_finite="allow-nan"
             )
             val_params = self.pred_param(X_val)
             val_loss_list = []
@@ -310,12 +311,13 @@ class NGBoost:
 
             loss_list += [train_loss_monitor(D, Y_batch, weight_batch)]
             loss = loss_list[-1]
-            grads = D.grad(Y_batch, natural=self.natural_gradient)
+            grads = D.grad(Y_batch, self.natural_gradient)
 
             proj_grad = self.fit_base(X_batch, grads, weight_batch)
-            scale = self.line_search(proj_grad, P_batch, Y_batch, weight_batch)
 
-            # pdb.set_trace()
+            #scale = self.line_search(proj_grad, P_batch, Y_batch, weight_batch)
+            scale = 1.
+
             params -= (
                 self.learning_rate
                 * scale
@@ -372,8 +374,8 @@ class NGBoost:
 
         return self
 
-    def score(self, X, Y):  # for sklearn
-        return self.Manifold(self.pred_dist(X)._params).total_score(Y)
+    def score(self, X, Y, max_iter=None):  # for sklearn
+        return self.Manifold(self.pred_dist(X, max_iter=max_iter)._params).total_score(Y)
 
     def pred_dist(self, X, max_iter=None):
         """
@@ -413,17 +415,24 @@ class NGBoost:
         predictions = []
         m, n = X.shape
         params = np.ones((m, self.Dist.n_params)) * self.init_params
-        for i, (models, s, col_idx) in enumerate(
-            zip(self.base_models, self.scalings, self.col_idxs)
-        ):
-            resids = np.array([model.predict(X[:, col_idx]) for model in models]).T
-            params -= self.learning_rate * resids * s
+        self.scalings = [1. for x in self.base_models]
+        if max_iter == -1:
             dists = self.Dist(
                 np.copy(params.T)
-            )  # if the params aren't copied, param changes with stages carry over to dists
+            )
             predictions.append(dists)
-            if max_iter and i == max_iter:
-                break
+        else:
+            for i, (models, s, col_idx) in enumerate(
+                zip(self.base_models, self.scalings, self.col_idxs)
+            ):
+                resids = np.array([model.predict(X[:, col_idx]) for model in models]).T
+                params -= self.learning_rate * resids * s
+                dists = self.Dist(
+                    np.copy(params.T)
+                )  # if the params aren't copied, param changes with stages carry over to dists
+                predictions.append(dists)
+                if max_iter and i == max_iter:
+                    break
         return predictions
 
     def predict(self, X, max_iter=None):
@@ -471,8 +480,8 @@ class NGBoost:
         if not self.base_models:
             return None
         # Check whether the base model is DecisionTreeRegressor
-        if not isinstance(self.base_models[0][0], DecisionTreeRegressor):
-            return None
+        #if not isinstance(self.base_models[0][0], DecisionTreeRegressor):
+        #    return None
         # Reshape the base_models
         params_trees = zip(*self.base_models)
 
@@ -505,3 +514,4 @@ class NGBoost:
         total_feature_importance = np.zeros(self.n_features)
         total_feature_importance[self.col_idxs[tree_index]] = tree_feature_importance
         return total_feature_importance
+
