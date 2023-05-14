@@ -267,9 +267,9 @@ class NGBoost:
         if Y is None:
             raise ValueError("y cannot be None")
 
-        X, Y = check_X_y(
-           X, Y, accept_sparse=True, y_numeric=True, multi_output=self.multi_output, force_all_finite="allow-nan"
-        )
+        #X, Y = check_X_y(
+        #   X, Y, accept_sparse=True, y_numeric=True, multi_output=self.multi_output, force_all_finite="allow-nan"
+        #)
 
         self.n_features = X.shape[1]
 
@@ -279,14 +279,14 @@ class NGBoost:
         params = self.pred_param(X)
 
         if X_val is not None and Y_val is not None:
-            X_val, Y_val = check_X_y(
-               X_val,
-               Y_val,
-               accept_sparse=True,
-               y_numeric=True,
-               multi_output=self.multi_output,
-               force_all_finite="allow-nan"
-            )
+            #X_val, Y_val = check_X_y(
+            #   X_val,
+            #   Y_val,
+            #   accept_sparse=True,
+            #   y_numeric=True,
+            #   multi_output=self.multi_output,
+            #   force_all_finite="allow-nan"
+            #)
             val_params = self.pred_param(X_val)
             val_loss_list = []
             best_val_loss = np.inf
