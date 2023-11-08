@@ -315,8 +315,8 @@ class NGBoost:
 
             proj_grad = self.fit_base(X_batch, grads, weight_batch)
 
-            #scale = self.line_search(proj_grad, P_batch, Y_batch, weight_batch)
-            scale = 1.
+            scale = self.line_search(proj_grad, P_batch, Y_batch, weight_batch)
+            #scale = 1.
 
             params -= (
                 self.learning_rate
