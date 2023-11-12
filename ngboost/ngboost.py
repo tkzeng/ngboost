@@ -125,7 +125,8 @@ class NGBoost:
     def pred_param(self, X, max_iter=None):
         m, n = X.shape
         params = np.ones((m, self.Manifold.n_params)) * self.init_params
-        self.scalings = [1. for x in self.base_models]
+        #self.scalings = [1. for x in self.base_models]
+        #print("self.scalings",self.scalings)
         for i, (models, s, col_idx) in enumerate(
             zip(self.base_models, self.scalings, self.col_idxs)
         ):
@@ -415,7 +416,8 @@ class NGBoost:
         predictions = []
         m, n = X.shape
         params = np.ones((m, self.Dist.n_params)) * self.init_params
-        self.scalings = [1. for x in self.base_models]
+        #self.scalings = [1. for x in self.base_models]
+        #print("self.scalings", self.scalings)
         if max_iter == -1:
             dists = self.Dist(
                 np.copy(params.T)
